@@ -44,7 +44,7 @@ func Start() error {
 		ctx.Response.Header.Set("Connection", "keep-alive")
 		ctx.Response.Header.Set("X-Content-Type-Options", "nosniff")
 
-		responseCh := make(chan []byte, 100)
+		responseCh := make(chan []byte, 10)
 		errorCh := make(chan error, 1)
 		ctx.SetBodyStreamWriter(func(w *bufio.Writer) {
 			for chunk := range responseCh {
