@@ -71,8 +71,6 @@ func Start() error {
 				case <-bg.Done():
 					return bg.Err()
 				}
-			}), llms.WithStreamingSkipLines([]string{
-				": OPENROUTER PROCESSING",
 			}))
 			if err != nil {
 				responseCh <- []byte("\n\nError: " + err.Error())
