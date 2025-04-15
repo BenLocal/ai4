@@ -1,28 +1,15 @@
 package main
 
 import (
-	"context"
-	"fmt"
 	"log"
 
-	"github.com/tmc/langchaingo/llms"
-	"github.com/tmc/langchaingo/llms/openai"
+	"github.com/benlocal/ai4/internal/runtime"
 )
 
 func main() {
-	ctx := context.Background()
-	options := []openai.Option{
-		openai.WithModel("deepseek/deepseek-v3-base:free"),
-		openai.WithBaseURL("https://openrouter.ai/api/v1"),
-	}
-	llm, err := openai.New(options...)
+	err := runtime.Start()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error starting runtime: %v", err)
 	}
-	prompt := "帮我写一个100字关于春天的故事，给小朋友看的"
-	completion, err := llms.GenerateFromSinglePrompt(ctx, llm, prompt)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(completion)
+
 }
