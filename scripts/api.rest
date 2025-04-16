@@ -1,0 +1,13 @@
+### add models
+POST http://localhost:7080/models/add HTTP/1.1
+Content-Type: application/json
+
+{
+    "name": "test",
+    "provider": "test",
+    "model_id": "llama2",
+    "base_url": "http://localhost:8000",
+    "api_key": "test",
+    "api_type": "openai"
+}
+
