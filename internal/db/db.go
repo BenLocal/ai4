@@ -1,12 +1,13 @@
 package db
 
 import (
-	"database/sql"
 	"errors"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type Datebase interface {
-	GetDb() *sql.DB
+	GetDb() *sqlx.DB
 }
 
 func DatebaseFactory(dbType, url string) (Datebase, error) {

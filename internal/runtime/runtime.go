@@ -14,7 +14,7 @@ func Start() error {
 	g := gracefulshutdown.New()
 	g.CatchSignals()
 
-	db, err := db.DatebaseFactory("sqlite", "file:./db.db")
+	db, err := db.DatebaseFactory("sqlite", "file:./app.db")
 	if err != nil {
 		return err
 	}
