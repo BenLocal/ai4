@@ -20,4 +20,5 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 )
 
+// go mod edit -replace github.com/tmc/langchaingo=github.com/benlocal/langchaingo@openrouter
 replace github.com/tmc/langchaingo => github.com/benlocal/langchaingo v0.0.0-20250415041836-ac8079547b06
