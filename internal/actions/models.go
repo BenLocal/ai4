@@ -70,37 +70,24 @@ func (m *Models) chatHandler(ctx *fasthttp.RequestCtx) {
 	ctx.Response.Header.Set("Cache-Control", "no-cache")
 	ctx.Response.Header.Set("Connection", "keep-alive")
 	ctx.Response.Header.Set("X-Content-Type-Options", "nosniff")
-
-	responseCh := make(chan []byte, 10)
-	errorCh := make(chan error, 1)
 	ctx.SetBodyStreamWriter(func(w *bufio.Writer) {
-		for chunk := range responseCh {
-			if _, err := w.Write(chunk); err != nil {
-				errorCh <- err
-				return
-			}
-			if err := w.Flush(); err != nil {
-				errorCh <- err
-				return
-			}
+		bgCtx := context.Background()
+
+		_, err = llms.GenerateFromSinglePrompt(
+			bgCtx,
+			llm,
+			string(txt),
+			llms.WithStreamingFunc(func(ctx context.Context, chunk []byte) error {
+				if _, err := w.Write(chunk); err != nil {
+					return err
+				}
+				return w.Flush()
+			}),
+		)
+
+		if err != nil {
+			w.WriteString("\n\nError: " + err.Error())
+			w.Flush()
 		}
 	})
-	go func() {
-		defer close(responseCh)
-		bgCtx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-		_, err = llms.GenerateFromSinglePrompt(bgCtx, llm, string(txt), llms.WithStreamingFunc(func(bg context.Context, chunk []byte) error {
-			select {
-			case responseCh <- chunk:
-				return nil
-			case err := <-errorCh:
-				return err
-			case <-bg.Done():
-				return bg.Err()
-			}
-		}))
-		if err != nil {
-			responseCh <- []byte("\n\nError: " + err.Error())
-		}
-	}()
 }
