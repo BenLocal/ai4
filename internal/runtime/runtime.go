@@ -6,7 +6,6 @@ import (
 	"github.com/benlocal/ai4/internal/actions"
 	"github.com/benlocal/ai4/internal/db"
 	"github.com/benlocal/ai4/pkg/gracefulshutdown"
-	"github.com/benlocal/ai4/pkg/service"
 	"github.com/fasthttp/router"
 )
 
@@ -27,7 +26,7 @@ func Start() error {
 	healthz.AddRouters(router)
 	models.AddRouters(router)
 
-	g.Add(service.New(7080, router))
+	g.Add(NewHttpServer(7080, router))
 
 	ctx := context.Background()
 	return g.Start(ctx)

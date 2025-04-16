@@ -1,4 +1,4 @@
-package service
+package runtime
 
 import (
 	"context"
@@ -16,7 +16,7 @@ type HttpServer struct {
 	server *fasthttp.Server
 }
 
-func New(port int, router *router.Router) *HttpServer {
+func NewHttpServer(port int, router *router.Router) *HttpServer {
 
 	return &HttpServer{
 		port:   port,
