@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
@@ -36,4 +37,8 @@ func newSqlite(url string) (*SqliteDatebase, error) {
 
 func (s *SqliteDatebase) GetDb() *sqlx.DB {
 	return s.db
+}
+
+func (s *SqliteDatebase) GetNativeDb() *sql.DB {
+	return s.db.DB
 }
