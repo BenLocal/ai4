@@ -11,3 +11,7 @@ Content-Type: application/json
     "api_type": "openai"
 }
 
+@TXT=帮我写一个关于春天的故事，100字左右即可
+### chat
+GET http://localhost:7080/chat?txt={{TXT}} HTTP/1.1
+

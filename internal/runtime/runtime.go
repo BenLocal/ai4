@@ -20,11 +20,13 @@ func Start() error {
 
 	healthz := actions.NewHealthz(db)
 	models := actions.NewModels(db)
+	chats := actions.NewChats(db)
 
 	// Initialize the router
 	router := router.New()
 	healthz.AddRouters(router)
 	models.AddRouters(router)
+	chats.AddRouters(router)
 
 	g.Add(NewHttpServer(7080, router))
 
