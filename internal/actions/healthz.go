@@ -20,5 +20,5 @@ func (h *Healthz) AddRouters(router *router.Router) {
 
 func (h *Healthz) healthzHandler(ctx *fasthttp.RequestCtx) {
 	ctx.SetStatusCode(fasthttp.StatusOK)
-	ctx.WriteString("Hello, World!")
+	ctx.WriteString("up")
 }
