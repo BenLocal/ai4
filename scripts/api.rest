@@ -13,5 +13,12 @@ Content-Type: application/json
 
 @TXT=帮我写一个关于春天的故事，100字左右即可
 ### chat
-GET http://localhost:7080/chat?txt={{TXT}} HTTP/1.1
+GET http://localhost:7080/chat_txt?txt={{TXT}} HTTP/1.1
 
+### chat
+POST http://localhost:7080/chat HTTP/1.1
+Content-Type: application/json
+
+{
+    "prompt": "{{TXT}}"
+}

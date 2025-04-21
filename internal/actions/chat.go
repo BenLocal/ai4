@@ -19,13 +19,13 @@ type Chats struct {
 	db db.Datebase
 }
 
-func NewChats(db db.Datebase) *Models {
-	return &Models{db: db}
+func NewChats(db db.Datebase) *Chats {
+	return &Chats{db: db}
 }
 
 func (c *Chats) AddRouters(router *router.Router) {
 	router.GET("/chat_txt", c.chatTxtHandler)
-	router.GET("/chat", c.chatHandler)
+	router.POST("/chat", c.chatHandler)
 }
 
 type ChatRequest struct {
@@ -52,7 +52,16 @@ func (c *Chats) chatHandler(ctx *fasthttp.RequestCtx) {
 	ctx.Response.Header.Set("Cache-Control", "no-cache")
 	ctx.Response.Header.Set("Connection", "keep-alive")
 	ctx.Response.Header.Set("X-Content-Type-Options", "nosniff")
-	c.innerChat(ctx, string(req.Prompt))
+	c.innerChat(ctx, string(req.Prompt), func(done bool, chunks []byte, err error) string {
+		if err != nil {
+			return "Error: " + err.Error() + "\n\n"
+		}
+		if done {
+			return "data: [DONE]\n\n"
+		}
+
+		return "data: " + string(chunks) + "\n\n"
+	})
 }
 
 func (c *Chats) chatTxtHandler(ctx *fasthttp.RequestCtx) {
@@ -67,10 +76,19 @@ func (c *Chats) chatTxtHandler(ctx *fasthttp.RequestCtx) {
 	ctx.Response.Header.Set("Cache-Control", "no-cache")
 	ctx.Response.Header.Set("Connection", "keep-alive")
 	ctx.Response.Header.Set("X-Content-Type-Options", "nosniff")
-	c.innerChat(ctx, string(txt))
+	c.innerChat(ctx, string(txt), func(done bool, chunks []byte, err error) string {
+		if err != nil {
+			return "\n\nError: " + err.Error()
+		}
+		if done {
+			return "\n\n"
+		}
+
+		return string(chunks)
+	})
 }
 
-func (c *Chats) innerChat(ctx *fasthttp.RequestCtx, txt string) {
+func (c *Chats) innerChat(ctx *fasthttp.RequestCtx, txt string, writer func(done bool, chunks []byte, err error) string) {
 	options := []openai.Option{
 		openai.WithModel("qwen-plus"),
 		openai.WithBaseURL("https://dashscope.aliyuncs.com/compatible-mode/v1"),
@@ -90,11 +108,6 @@ func (c *Chats) innerChat(ctx *fasthttp.RequestCtx, txt string) {
 	conversationBuffer := memory.NewConversationBuffer(memory.WithChatHistory(chatHistory))
 	llmChain := chains.NewConversation(llm, conversationBuffer)
 
-	ctx.Response.Header.SetContentType("text/plain; charset=utf-8")
-	ctx.Response.Header.Set("Transfer-Encoding", "chunked")
-	ctx.Response.Header.Set("Cache-Control", "no-cache")
-	ctx.Response.Header.Set("Connection", "keep-alive")
-	ctx.Response.Header.Set("X-Content-Type-Options", "nosniff")
 	ctx.SetBodyStreamWriter(func(w *bufio.Writer) {
 		bgCtx := context.Background()
 
@@ -103,7 +116,8 @@ func (c *Chats) innerChat(ctx *fasthttp.RequestCtx, txt string) {
 			llmChain,
 			txt,
 			chains.WithStreamingFunc(func(ctx context.Context, chunk []byte) error {
-				if _, err := w.Write(chunk); err != nil {
+				v := writer(false, chunk, nil)
+				if _, err := w.WriteString(v); err != nil {
 					return err
 				}
 				return w.Flush()
@@ -111,8 +125,15 @@ func (c *Chats) innerChat(ctx *fasthttp.RequestCtx, txt string) {
 		)
 
 		if err != nil {
-			w.WriteString("\n\nError: " + err.Error())
+			v := writer(false, nil, err)
+			w.WriteString(v)
 			w.Flush()
+		}
+
+		r := writer(true, nil, nil)
+		w.Flush()
+		if _, err := w.WriteString(r); err != nil {
+			return
 		}
 	})
 }
